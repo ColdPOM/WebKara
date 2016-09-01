@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <title>ヒトカラちゃん</title>
+    </head>
+    <body>
+        <div align="center">
+        	<h2>ヒトカラちゃん</h><br><br>
+			<div id="MovieArea"><iframe width="560" height="315" frameborder="1" allowfullscreen></iframe></div>
+			<h4>動画URL</h>
+			<input id="MovieURL" type="text" size="50"/>
+			<button id="LoadButton">読み込む</button>
+						
+			<h4>マイク音量：</h>
+			<input id="MikeSlider" type="range" value="100" min="0" max="100" step="1" />
+			<span id="MikeValue">100</span>
+        </div>
+		
+		
+		<!-- ここからスクリプト -->
+		
+		
+        <script type="text/javascript">
+		
+		navigator.getUserMedia =
+		    navigator.getUserMedia ||
+		    navigator.webkitGetUserMedia ||
+		    navigator.mozGetUserMedia ||
+		    navigator.msGetUserMedia;
+		window.AudioContext =
+		    window.AudioContext||
+		    window.webkitAudioContext;
+		
+		// オーディオ関連
+		var context = new AudioContext();
+		var gainNode = context.createGain();
+		
+		// html要素
+		var movieArea = document.getElementById("MovieArea");
+		var movieURL = document.getElementById("MovieURL");
+		var loadButton = document.getElementById("LoadButton");
+		var mikeSlider = document.getElementById("MikeSlider");
+		var mikeValue = document.getElementById("MikeValue");
+
+		// 端末のメディアストリームを取得
+		navigator.getUserMedia (
+			{ audio:true },
+			function(stream) {
+				var source = context.createMediaStreamSource(stream);
+				window.dotnsf_hack_for_mozzila = source; // firefoxのバグ対策
+				source.connect(gainNode);
+				gainNode.connect(context.destination);
+			},
+			function(e){ // エラー
+				console.log(e);
+		 	}
+		);
+		
+		// 読み込みボタンが押された
+		loadButton.onclick = function() {
+			if(movieURL.value.indexOf('youtube') > 0) { // Youtube
+				var urlBase = "https://www.youtube.com/embed/";
+	            var id = movieURL.value.substring(movieURL.value.indexOf('?') + 3);
+				var src = urlBase + id;
+				movieArea.innerHTML = "<iframe width='560' height='315' frameborder='1' allowfullscreen src='" + src + "'></iframe>";
+			}
+			else if(movieURL.value.indexOf('nicovideo') > 0) { // ニコ動
+				var urlBase = "nicovideo.php";
+				var id = movieURL.value.substring(movieURL.value.indexOf('/sm') + 1).split('?')[0];
+				var src = urlBase + "?id=" + id;
+				movieArea.innerHTML = "<iframe width='560' height='315' frameborder='1'  scrolling='no' allowfullscreen src='" + src + "'></iframe>";
+				
+			}
+		}
+
+		// マイクボリューム変更
+		mikeSlider.addEventListener("input", function() {
+		    mikeValue.innerHTML = this.value;
+			gainNode.gain.value = this.value * 0.01;
+		}, false);
+		
+		mikeSlider.addEventListener("change", function() {
+		    mikeValue.innerHTML = this.value;
+			gainNode.gain.value = this.value * 0.01;
+		}, false);
+		
+        </script>
+    </body>
+</html>
