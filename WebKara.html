@@ -12,8 +12,12 @@
 			<button id="LoadButton">読み込む</button>
 						
 			<h4>マイク音量：</h>
-			<input id="MikeSlider" type="range" value="100" min="0" max="100" step="1" />
-			<span id="MikeValue">100</span>
+			<input id="MikeSlider" type="range" value="10" min="0" max="10" step="1" />
+			<span id="MikeValue">10</span>
+			
+			<h4>エコー：</h>
+			<input id="EchoSlider" type="range" value="10" min="0" max="10" step="1" />
+			<span id="EchoValue">10</span>
         </div>
 		
 		
@@ -33,7 +37,10 @@
 		
 		// オーディオ関連
 		var context = new AudioContext();
-		var gainNode = context.createGain();
+		var gainNode = context.createGain();      // ボリューム
+		var delayNode = context.createDelay();    // ディレイ
+		var feedback = context.createGain();      // フィードバック
+		var wetGain = context.createGain();       // エコーのボリューム
 		
 		// html要素
 		var movieArea = document.getElementById("MovieArea");
@@ -41,6 +48,8 @@
 		var loadButton = document.getElementById("LoadButton");
 		var mikeSlider = document.getElementById("MikeSlider");
 		var mikeValue = document.getElementById("MikeValue");
+		var echoSlider = document.getElementById("EchoSlider");
+		var echoValue = document.getElementById("EchoValue");
 
 		// 端末のメディアストリームを取得
 		navigator.getUserMedia (
@@ -48,8 +57,28 @@
 			function(stream) {
 				var source = context.createMediaStreamSource(stream);
 				window.dotnsf_hack_for_mozzila = source; // firefoxのバグ対策
+				
+				delayNode.delayTime.value = 0.12;
+				feedback.gain.value = 0.5;
+				wetGain.gain.value = 0.5;
+				
+				// ノードをつなぐ
+				source.connect(delayNode);
 				source.connect(gainNode);
+				delayNode.connect(wetGain);
+				wetGain.connect(gainNode);
+				wetGain.connect(feedback);
+				feedback.connect(delayNode);
 				gainNode.connect(context.destination);
+				
+				/*
+				source.connect(delayNode);
+				source.connect(context.destination);
+				delayNode.connect(gainNode);
+				gainNode.connect(context.destination);
+				gainNode.connect(feedback);
+				feedback.connect(delayNode);
+				*/
 			},
 			function(e){ // エラー
 				console.log(e);
@@ -76,12 +105,39 @@
 		// マイクボリューム変更
 		mikeSlider.addEventListener("input", function() {
 		    mikeValue.innerHTML = this.value;
-			gainNode.gain.value = this.value * 0.01;
+			gainNode.gain.value = this.value * 0.1;
 		}, false);
 		
 		mikeSlider.addEventListener("change", function() {
 		    mikeValue.innerHTML = this.value;
-			gainNode.gain.value = this.value * 0.01;
+			gainNode.gain.value = this.value * 0.1;
+		}, false);
+		
+		// エコーレベルの変更
+		echoSlider.addEventListener("input", function() {
+		    echoValue.innerHTML = this.value;
+			feedback.gain.value = this.value * 0.05;
+			if(this.value == 0)
+			{
+				wetGain.gain.value = 0;
+			}
+			else
+			{
+				wetGain.gain.value = 0.5;
+			}
+		}, false);
+		
+		echoSlider.addEventListener("change", function() {
+		    echoValue.innerHTML = this.value;
+			feedback.gain.value = this.value * 0.05;
+			if(this.value == 0)
+			{
+				wetGain.gain.value = 0;
+			}
+			else
+			{
+				wetGain.gain.value = 0.5;
+			}
 		}, false);
 		
         </script>
