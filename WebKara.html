@@ -70,15 +70,6 @@
 				wetGain.connect(feedback);
 				feedback.connect(delayNode);
 				gainNode.connect(context.destination);
-				
-				/*
-				source.connect(delayNode);
-				source.connect(context.destination);
-				delayNode.connect(gainNode);
-				gainNode.connect(context.destination);
-				gainNode.connect(feedback);
-				feedback.connect(delayNode);
-				*/
 			},
 			function(e){ // エラー
 				console.log(e);
